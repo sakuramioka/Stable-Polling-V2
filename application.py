@@ -4,6 +4,22 @@ import mysql.connector
 import json
 import os
 
+settings = {
+    'image_width' : 180, # Width of candidate image
+    'image_height' : 180, # Height of candidate image
+    'min_spacing' : 100, # Distance between two candidate images (in pixels)
+    'per_row' : 5 # Number of candidates displayed per row
+}
+
+themes = {
+    'Light' : {
+        'background_image': "images//background_light.jpg",
+        'text_color_1': "Black",
+        'text_color_2': "Grey20"
+    }
+}
+ 
+
 # Read from config
 data = open('config.json','r+')
 configuration_file = json.load(data)
@@ -48,32 +64,37 @@ canvas.pack()
 # Set the background image on the canvas
 canvas.create_image(0, 0, anchor=tk.NW, image=background_image)
 
+def format_images(start, stop, post, y):
+    list_width = (settings['image_width'] + settings['min_spacing'])*((stop - start)-1)
+    x = (screen_width - list_width)//2
+    for index in range(start, stop):
+        if os.path.isfile(election_dictionary[post][index][4]):
+            image = Image.open(election_dictionary[post][index][4])   
+        else:
+            image = Image.open("images\\placeholder.png")
+        image = image.resize((settings['image_width'], settings['image_height']), Image.Resampling.LANCZOS)
+        image = ImageTk.PhotoImage(image)
+        images.append(image)
+        canvas.create_image(x, y, image=image, anchor = tk.CENTER)
+        canvas.create_text(x, (y + settings['image_height']//2+ 20), text=election_dictionary[post][index][1].upper(), font=('Dubai', '12', 'bold'), fill='Black', anchor=tk.CENTER)
+        canvas.create_text(x, (y + settings['image_height']//2+ 40), text=f"{election_dictionary[post][index][2]}-{election_dictionary[post][index][3]}", font=('Dubai', '12', 'bold'), fill='Black', anchor=tk.CENTER)
+        x = (x + settings['image_width'] + settings['min_spacing'])
+
 # Display candidate images
 images = []
 def generate_list(post):
     global images
-    image_width = 200
-    image_height = 200
-    list_of_candidates = election_dictionary[post]
+    images.clear()
     number_of_candidates = len(election_dictionary[post])
-    min_spacing = 100
-    list_width = (image_width + min_spacing)*(number_of_candidates-1)
-    x = screen_width//2 - list_width//2
-    y = screen_height//2
-    print(list_width)
-    print(screen_width)
-    print(min_spacing)
-    print(x, y)
-    for candidate in list_of_candidates:
-        if os.path.isfile(candidate[4]):
-            image = Image.open(candidate[4])   
-        else:
-            image = Image.open("images\\placeholder.png")
-        image = image.resize((image_width, image_height), Image.Resampling.LANCZOS)
-        image = ImageTk.PhotoImage(image)
-        images.append(image)
-        canvas.create_image(x, y, image=image, anchor = tk.CENTER)
-        x = x + image_width + min_spacing
+    if number_of_candidates <= settings['per_row']:
+        format_images(0, number_of_candidates, post, screen_height//2)
+    else:
+        format_images(0, settings['per_row']-1, post, screen_height//2 - 100)
+        format_images(settings['per_row']-1, number_of_candidates, post, screen_height//2 + 400)
+
+
+    
+
 
 generate_list('Example_post_1')
 
