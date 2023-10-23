@@ -72,7 +72,9 @@ canvas.pack()
 canvas.create_image(0, 0, anchor=tk.NW, image=background_image)
 
 # Format displaying images
+garbage = []
 def format_images(start, stop, post, y):
+    global garbage
     list_width = (settings['image_width'] + settings['min_spacing'])*((stop - start)-1)
     x = (screen_width - list_width)//2
     for index in range(start, stop):
@@ -82,23 +84,30 @@ def format_images(start, stop, post, y):
             image = Image.open("images\\placeholder.png")
         image = image.resize((settings['image_width'], settings['image_height']), Image.Resampling.LANCZOS)
         image = ImageTk.PhotoImage(image)
-        images.append(image)
+        garbage.append(image)
         canvas.create_image(x, y, image=image, anchor = tk.CENTER)
-        canvas.create_text(x, (y + settings['image_height']//2+ 20), text=election_dictionary[post][index][1].upper(), font=(settings['font'], settings['name_size_px'], 'bold'), fill=themes[selected_theme]['text_color_1'], anchor=tk.CENTER, justify='center')
-        canvas.create_text(x, (y + settings['image_height']//2+ 40), text=f"{election_dictionary[post][index][2]}-{election_dictionary[post][index][3]}", font=(settings['font'], settings['class_size_px'], 'bold'), fill=themes[selected_theme]['text_color_2'], anchor=tk.CENTER, justify='center')
+        canvas.create_text(x, (y + settings['image_height']//2+ 20), text=election_dictionary[post][index][1].upper(), font=(settings['font'], settings['name_size_px'], 'bold'), fill=themes[selected_theme]['text_color_1'], anchor=tk.CENTER, justify='center', tags='existing')
+        canvas.create_text(x, (y + settings['image_height']//2+ 40), text=f"{election_dictionary[post][index][2]}-{election_dictionary[post][index][3]}", font=(settings['font'], settings['class_size_px'], 'bold'), fill=themes[selected_theme]['text_color_2'], anchor=tk.CENTER, justify='center', tags='existing')
         vote_button_image = Image.open(themes[selected_theme]['vote_button'])
         vote_button_image = vote_button_image.resize((100, 35), Image.Resampling.LANCZOS)
         vote_button_image = ImageTk.PhotoImage(vote_button_image)
-        vote_button = tk.Button(canvas, image=vote_button_image,bg="#f0f0f0", bd=2, highlightthickness= 0)
+        vote_button = tk.Button(canvas, image=vote_button_image,bg="#f0f0f0", bd=2, highlightthickness= 0, command=lambda post=post, candidate_id=election_dictionary[post][index][0],: vote(post, candidate_id))
+        garbage.append(vote_button)
         vote_button.image = vote_button_image
         vote_button.place(x=x, y=y + settings['image_height']//2+ 80, anchor='center')
+        
         x = (x + settings['image_width'] + settings['min_spacing'])
 
 # Display candidate images
-images = []
 def generate_list(post):
-    global images
-    images.clear()
+    global garbage
+    for element in garbage:
+        try:
+            element.destroy()
+        except Exception:
+            pass
+    garbage.clear()
+    canvas.delete('existing')
     number_of_candidates = len(election_dictionary[post])
     if number_of_candidates <= settings['per_row']:
         format_images(0, number_of_candidates, post, screen_height//2)
@@ -106,8 +115,17 @@ def generate_list(post):
         format_images(0, settings['per_row']-1, post, screen_height//2 - 100)
         format_images(settings['per_row']-1, number_of_candidates, post, screen_height//2 + 400)
 
-
-    
+def vote(post, candidate_id):
+    cursor = db.cursor()
+    cursor.execute(f"UPDATE {post} SET votes = votes + 1 WHERE id = {candidate_id}")
+    db.commit()
+    candidate_name = election_dictionary[post][candidate_id][1]
+    print(candidate_name)
+    post_index = all_posts.index(post)
+    try:
+        generate_list(all_posts[post_index+1])
+    except IndexError:
+        generate_list(all_posts[0])
 
 
 generate_list('Example_post_1')
