@@ -5,14 +5,16 @@ import json
 import os
 
 settings = {
-    'image_width' : 180, # Width of candidate image
-    'image_height' : 180, # Height of candidate image
-    'min_spacing' : 100, # Distance between two candidate images (in pixels)
-    'name_size_px' : 13, # Size of candidate's name (in pixels)
-    'class_size_px' : 11, # Size of candidate's class and section (in pixels)
+    'image_width' : 230, # Width of candidate image
+    'image_height' : 230, # Height of candidate image
+    'min_spacing' : 130, # Distance between two candidate images (in pixels)
+    'name_size_px' : 17, # Size of candidate's name (in pixels)
+    'class_size_px' : 13, # Size of candidate's class and section (in pixels)
     'per_row' : 5, # Number of candidates displayed per row
     'font' : 'Dubai', # Universal font
-    'vote_button_size' : (100, 35)
+    'vote_button_size' : (150, 50), # Size of vote button (x, y)
+    'header_size_px' : 30, # Size of the post name text that displays above the list (in pixels)
+    'row_spacing_px' : 300 # Distance between row 1 and 2 in case there are more than five candidates in one post (in pixels)
 }
 
 themes = {
@@ -110,16 +112,18 @@ def generate_list(post):
     canvas.delete('existing')
     number_of_candidates = len(election_dictionary[post])
     if number_of_candidates <= settings['per_row']:
+        canvas.create_text(screen_width//2, screen_height//2 - settings['image_height'], text=post, font=(settings['font'], settings['header_size_px']), fill=themes[selected_theme]['text_color_1'], anchor=tk.CENTER, justify='center', tags='existing')
         format_images(0, number_of_candidates, post, screen_height//2)
     else:
-        format_images(0, settings['per_row']-1, post, screen_height//2 - 100)
-        format_images(settings['per_row']-1, number_of_candidates, post, screen_height//2 + 400)
+        canvas.create_text(screen_width//2, screen_height//2 - settings['row_spacing_px'], text=post, font=(settings['font'], settings['header_size_px']), fill=themes[selected_theme]['text_color_1'], anchor=tk.CENTER, justify='center', tags='existing')
+        format_images(0, settings['per_row'], post, screen_height//2 - 100)
+        format_images(settings['per_row'], number_of_candidates, post, screen_height//2 + settings['row_spacing_px'])
 
 def vote(post, candidate_id):
     cursor = db.cursor()
     cursor.execute(f"UPDATE {post} SET votes = votes + 1 WHERE id = {candidate_id}")
     db.commit()
-    candidate_name = election_dictionary[post][candidate_id][1]
+    candidate_name = election_dictionary[post][candidate_id-1][1]
     print(candidate_name)
     post_index = all_posts.index(post)
     try:
@@ -128,6 +132,6 @@ def vote(post, candidate_id):
         generate_list(all_posts[0])
 
 
-generate_list('Example_post_1')
+generate_list(all_posts[0])
 
 root.mainloop()
