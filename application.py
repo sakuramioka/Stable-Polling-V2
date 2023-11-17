@@ -118,8 +118,8 @@ def vote(post, candidate_id):
         root.after(settings['display_time']*1000, lambda: generate_list(all_posts[post_index+1]))     
     else:
         tk.Message(top, text=f"You have voted for {candidate_name}!\n\nThank you for voting!", padx=10, pady=100, justify="center" ,font=(settings['font'], settings['header_size_px'] ,"bold"), bg = themes[selected_theme]['background_color'], fg= themes[selected_theme]['text_color_2']).pack()
-        top.after(settings['display_time']*1000, top.destroy)
-        root.after(settings['display_time']*1000, lambda: generate_list(all_posts[0]))
+        top.after((settings['display_time']+2)*1000, top.destroy)
+        root.after((settings['display_time']+2)*1000, lambda: generate_list(all_posts[0]))
 
 
 generate_list(all_posts[0])
