@@ -4,37 +4,14 @@ import mysql.connector
 import json
 import os
 
-settings = {
-    'image_width' : 180, # Width of candidate image
-    'image_height' : 180, # Height of candidate image
-    'min_spacing' : 130, # Distance between two candidate images (in pixels)
-    'name_size_px' : 14, # Size of candidate's name (in pixels)
-    'class_size_px' : 12, # Size of candidate's class and section (in pixels)
-    'per_row' : 5, # Number of candidates displayed per row
-    'font' : 'Dubai', # Universal font
-    'vote_button_size' : (135, 40), # Size of vote button (x, y)
-    'header_size_px' : 22, # Size of the post name text that displays above the list (in pixels)
-    'row_spacing_px' : 215, # Distance between row 1 and 2 in case there are more than five candidates in one post (in pixels)
-    'display_time': 3, # Time to display vote pop-up for (in seconds)
-    'voted_popup_size': (600, 200) # Size of confirmation pop-up (x, y)
-}
-
-themes = {
-    'Light' : {
-        'background_image': "images//background_light.jpg",
-        'background_color': "White",
-        'text_color_1': "Black",
-        'text_color_2': "Grey20",
-        'vote_button' : "images\\Vote_Button.png"
-    }
-}
-
-# Choose a theme
-selected_theme = 'Light' 
-
 # Read from config
 data = open('config.json','r+')
 configuration_file = json.load(data)
+settings = configuration_file['settings']
+themes = configuration_file['themes']
+
+# Choose a theme
+selected_theme = 'Light' 
 
 db = mysql.connector.connect(
     host=configuration_file['host'],
@@ -42,7 +19,6 @@ db = mysql.connector.connect(
     password=configuration_file['password'],
     database=configuration_file['database']
 )
-
 
 #Load data to memory
 election_dictionary = {}

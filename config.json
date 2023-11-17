@@ -6,5 +6,28 @@
      "posts": [
           "Example_post_1",
           "Example_post_2"
-     ]
+     ],
+     "settings": {
+          "image_width": 180,
+          "image_height" : 180,
+          "min_spacing" : 130, 
+          "name_size_px" : 14,
+          "class_size_px" : 12,
+          "per_row" : 5,
+          "font" : "Dubai",
+          "vote_button_size" : [135, 40],
+          "header_size_px" : 22,
+          "row_spacing_px" : 215,
+          "display_time": 3,
+          "voted_popup_size": [600, 200]
+      },
+     "themes": {
+          "Light" : {
+              "background_image": "images//background_light.jpg",
+              "background_color": "White",
+              "text_color_1": "Black",
+              "text_color_2": "Grey20",
+              "vote_button" : "images\\Vote_Button.png"
+          }
+      }
 }
