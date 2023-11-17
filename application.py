@@ -14,12 +14,15 @@ settings = {
     'font' : 'Dubai', # Universal font
     'vote_button_size' : (135, 40), # Size of vote button (x, y)
     'header_size_px' : 22, # Size of the post name text that displays above the list (in pixels)
-    'row_spacing_px' : 215 # Distance between row 1 and 2 in case there are more than five candidates in one post (in pixels)
+    'row_spacing_px' : 215, # Distance between row 1 and 2 in case there are more than five candidates in one post (in pixels)
+    'display_time': 3, # Time to display vote pop-up for (in seconds)
+    'voted_popup_size': (600, 200) # Size of confirmation pop-up (x, y)
 }
 
 themes = {
     'Light' : {
         'background_image': "images//background_light.jpg",
+        'background_color': "White",
         'text_color_1': "Black",
         'text_color_2': "Grey20",
         'vote_button' : "images\\Vote_Button.png"
@@ -62,7 +65,7 @@ screen_height = root.winfo_screenheight()
 screen_width = root.winfo_screenwidth()
 
 # Load and resize the background image to fit the window
-background_image = Image.open(themes[selected_theme]['background_image'])  # Replace with your image path
+background_image = Image.open(themes[selected_theme]['background_image'])
 background_image = background_image.resize((1920, 1080), Image.Resampling.LANCZOS)
 background_image = ImageTk.PhotoImage(background_image)
 
@@ -126,12 +129,21 @@ def vote(post, candidate_id):
     cursor.execute(f"UPDATE {post} SET votes = votes + 1 WHERE id = {candidate_id}")
     db.commit()
     candidate_name = election_dictionary[post][candidate_id-1][1]
-    print(candidate_name)
     post_index = all_posts.index(post)
-    try:
-        generate_list(all_posts[post_index+1])
-    except IndexError:
-        generate_list(all_posts[0])
+    # Display pop-up ↓
+    top = tk.Toplevel(root)
+    top.geometry(f"{settings['voted_popup_size'][0]}x{settings['voted_popup_size'][1]}")
+    top.title("Vote has been casted!")
+    top.geometry(f"{settings['voted_popup_size'][0]}x{settings['voted_popup_size'][1]}+{screen_width//2 - settings['voted_popup_size'][0]//2}+{screen_height//2 - settings['voted_popup_size'][1]//2}")
+    top.configure(background= themes[selected_theme]['background_color'])
+    if post_index+1 < len(all_posts):
+        tk.Message(top, text=f"You have voted for {candidate_name}!", padx=10, pady=100, justify="center" ,font=(settings['font'], settings['header_size_px'] ,"bold"), bg = themes[selected_theme]['background_color'], fg= themes[selected_theme]['text_color_2']).pack()
+        top.after(settings['display_time']*1000, top.destroy)
+        root.after(settings['display_time']*1000, lambda: generate_list(all_posts[post_index+1]))     
+    else:
+        tk.Message(top, text=f"You have voted for {candidate_name}!\n\nThank you for voting!", padx=10, pady=100, justify="center" ,font=(settings['font'], settings['header_size_px'] ,"bold"), bg = themes[selected_theme]['background_color'], fg= themes[selected_theme]['text_color_2']).pack()
+        top.after(settings['display_time']*1000, top.destroy)
+        root.after(settings['display_time']*1000, lambda: generate_list(all_posts[0]))
 
 
 generate_list(all_posts[0])
