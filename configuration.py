@@ -40,14 +40,24 @@ canvas.pack()
 # Set the background image on the canvas
 canvas.create_image(0, 0, anchor=tk.NW, image=background_image)
 
+# Switch button
+switch_button_img = Image.open("images\\switch.png")
+switch_button_img = switch_button_img.resize((screen_height//16, screen_height//16), Image.Resampling.LANCZOS)
+switch_button_img = ImageTk.PhotoImage(switch_button_img)
+switch_button = tk.Button(canvas, image=switch_button_img, bg="#f0f0f0", bd=0)
+switch_button.image = switch_button_img
+switch_button.place(x=20, y=screen_height//19, anchor=tk.W)
+
+
 def generate_settings():
+    canvas.create_text(40 + screen_height//16, screen_height//18, anchor=tk.W, text='CONFIGURATION', font=('Dubai', screen_height//14, 'bold'), fill='white')
     pad_min = screen_height//100
     pad_max = pad_min*4
-    x,y = 40,150
+    x,y = 40,screen_height//8
     font_size = screen_height//50
     entry_width = screen_width//10       
     for setting in settings:
-        canvas.create_text(x-20, y, text= setting[name].upper()+":", font=('Dubai', font_size, 'bold'), fill='Black', anchor=tk.W)
+        canvas.create_text(x-20, y, text= setting[name].title()+":", font=('Dubai', font_size, 'bold'), fill='Black', anchor=tk.W)
         y = y+font_size + pad_min
         canvas.create_text(x, y, text= setting[description], font=('Dubai', font_size - 5), fill='Grey20', anchor=tk.W)
         y = y+font_size + pad_min + 5
@@ -71,7 +81,7 @@ def generate_settings():
             y = y+font_size + pad_max
         if y+font_size*3+pad_min*3+5 > screen_height:
             x = x + screen_width//3
-            y = 150
+            y = screen_height//8
 
 generate_settings()
 
