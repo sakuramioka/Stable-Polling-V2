@@ -1,5 +1,6 @@
 import tkinter as tk
 from PIL import Image, ImageTk
+import tkinter.messagebox as messagebox
 import mysql.connector
 import json
 import os
@@ -13,12 +14,18 @@ themes = configuration_file['themes']
 # Choose a theme
 selected_theme = 'Light' 
 
-db = mysql.connector.connect(
-    host=configuration_file['host'],
-    user=configuration_file['user'],
-    password=configuration_file['password'],
-    database=configuration_file['database']
-)
+try:    
+    db = mysql.connector.connect(
+        host=configuration_file['host'],
+        user=configuration_file['user'],
+        password=configuration_file['password'],
+        database=configuration_file['database'])
+    messagebox.showinfo(title= f"Connected to MySQL {db.get_server_info()}", message= f"""Attempt to connect to MySQL server on {db.server_host}:{db.server_port} successful.\n
+Loaded database: {db.database}     
+ConnectionID: {db.connection_id}""")    
+except mysql.connector.Error as err:
+   messagebox.showinfo(title= f"Unable to connect to MySQL", message=f"Attempt to connect to MySQL host failed.\nSomething went wrong:\n\n{err}\n\nIs your MySQL service running?")
+   quit()
 
 #Load data to memory
 election_dictionary = {}
@@ -46,13 +53,26 @@ background_image = background_image.resize((1920, 1080), Image.Resampling.LANCZO
 background_image = ImageTk.PhotoImage(background_image)
 
 # Create a canvas for the background image
-canvas = tk.Canvas(root, width=1920, height=1080, highlightthickness=0)
+canvas = tk.Canvas(root, width=screen_width, height=screen_height, highlightthickness=0)
 canvas.pack()
 
 # Set the background image on the canvas
 canvas.create_image(0, 0, anchor=tk.NW, image=background_image)
 
+def quit_confirm():
+    answer = messagebox.askyesno(title="Quit", message="Are you sure that you want to quit?")
+    if answer:
+        root.destroy()
+
+close_button = tk.Button(canvas, borderwidth=0, highlightthickness=0, text="🗙", relief='sunken', font=(settings['font'], screen_height//35-10), activeforeground='indianred1', activebackground=themes[selected_theme]['controls_accent'], bg= themes[selected_theme]['controls_accent'], fg='#ffffff', justify='center', command=quit_confirm)
+minimize_button = tk.Button(canvas, borderwidth=0, highlightthickness=0, text="🗗", relief='sunken', font=(settings['font'], screen_height//35-10), activeforeground='light goldenrod', activebackground=themes[selected_theme]['controls_accent'], bg= themes[selected_theme]['controls_accent'], fg='#ffffff', justify='center', command=root.iconify)
+configure_button = tk.Button(canvas, borderwidth=0, highlightthickness=0, text="➲", relief='sunken', font=(settings['font'], screen_height//35-10), activeforeground= themes[selected_theme]['text_color_2'], activebackground=themes[selected_theme]['controls_accent'], bg= themes[selected_theme]['controls_accent'], fg='#ffffff', justify='center')
+close_button.place(x=screen_width, y=0, anchor=tk.NE, height=screen_height//35, width=screen_height//35)
+minimize_button.place(x=screen_width-screen_height//35, y=0, anchor=tk.NE, height=screen_height//35, width=screen_height//35)
+configure_button.place(x=screen_width-2*(screen_height//35), y=0, anchor=tk.NE, height=screen_height//35, width=screen_height//35)
+
 # Format displaying images
+voting_enabled = True
 garbage = []
 def format_images(start, stop, post, y):
     global garbage
@@ -76,12 +96,12 @@ def format_images(start, stop, post, y):
         garbage.append(vote_button)
         vote_button.image = vote_button_image
         vote_button.place(x=x, y=y + settings['image_height']//2+ 80, anchor='center')
-        
         x = (x + settings['image_width'] + settings['min_spacing'])
 
 # Display candidate images
 def generate_list(post):
     global garbage
+    global voting_enabled
     for element in garbage:
         try:
             element.destroy()
@@ -99,8 +119,13 @@ def generate_list(post):
         canvas.create_text(screen_width//2, screen_height//2 - settings['image_height']//2 - 120, text=f"{all_posts.index(post)+1}/{len(all_posts)}", font=(settings['font'], settings['header_size_px']-10, 'bold'), fill=themes[selected_theme]['text_color_2'], anchor=tk.CENTER, justify='center', tags='existing')
         format_images(0, settings['per_row'], post, screen_height//2 - 100)
         format_images(settings['per_row'], number_of_candidates, post, screen_height//2 + settings['row_spacing_px'])
+    voting_enabled = True
 
 def vote(post, candidate_id):
+    global voting_enabled
+    if not voting_enabled:
+        return None
+    voting_enabled = False
     cursor = db.cursor()
     cursor.execute(f"UPDATE {post} SET votes = votes + 1 WHERE id = {candidate_id}")
     db.commit()

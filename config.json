@@ -27,7 +27,8 @@
               "background_color": "White",
               "text_color_1": "Black",
               "text_color_2": "Grey20",
-              "vote_button" : "images\\Vote_Button.png"
+              "vote_button" : "images\\Vote_Button.png",
+              "controls_accent": "#6aa3fd"
           }
       }
 }
